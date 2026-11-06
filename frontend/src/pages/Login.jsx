@@ -3,13 +3,15 @@ import { useForm } from "react-hook-form";
 import Input from "../components/Input";
 import Button from "../components/Button";
 import { loginUser } from "../services/authServices";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 
 function Login() {
   const [serverError, setServerError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  // const [successMessage, setSuccessMessage] = useState("");
 
   const location = useLocation();
+  const navigate = useNavigate();
 
   const registrationMessage = location.state?.message;
 
@@ -26,11 +28,16 @@ function Login() {
 
   const onSubmit = async (data) => {
     setServerError("");
-    setSuccessMessage("");
+    // setSuccessMessage(""); 
 
     try {
       const result = await loginUser(data);
-      setSuccessMessage(result.msg || "Login successful!");
+      // setSuccessMessage(result.msg || "Login successful!");
+      if (result.success) {
+        navigate("/profile", {
+          replace: true,
+        });
+      }
       console.log("Login response:", result);
     } catch (error) {
       setServerError(error.message || "Login failed.");
@@ -69,14 +76,14 @@ function Login() {
         )}
 
         {/* Success message */}
-        {successMessage && (
+        {/* {successMessage && (
           <div
             role="status"
             className="rounded-lg bg-green-50 p-3 text-sm text-green-700"
           >
             {successMessage}
           </div>
-        )}
+        )} */}
 
         {/* Email */}
         <Input
