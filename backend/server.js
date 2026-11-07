@@ -11,6 +11,8 @@ const ProfileRoute = require("./routes/profileRoutes")
 const errorMiddleware = require("./middleware/errorMiddleware")
 
 const path = require("path")
+const { crossOriginResourcePolicy } = require("helmet")
+const { contentSecurityPolicy } = require("helmet")
 
 // const protect = require("./middleware/authMiddleware")
 
@@ -24,10 +26,20 @@ const app = express()
 
 //MIddleware
 app.use(cors({
-    origin : "http://localhost:5173",
-    credentials : true,
+    origin: "http://localhost:5173",
+    credentials: true,
 }))
-app.use(helmet())
+app.use(
+    helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        contentSecurityPolicy: {
+            directives: {
+                ...helmet.contentSecurityPolicy.getDefaultDirectives(),
+                "img-src": ["'self'", "data:", "http://localhost:5000"],
+            },
+        },
+    })
+);
 app.use(express.json())
 app.use(cookieParser())
 
@@ -51,7 +63,7 @@ app.use("/api/profile", ProfileRoute)
 // });
 
 //Test Route
-app.get("/", (req,res) =>{
+app.get("/", (req, res) => {
     res.send("Hi I am Live")
 })
 
@@ -66,7 +78,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     try {
         await connectDB()
-        app.listen(PORT, ()=>{
+        app.listen(PORT, () => {
             console.log(`Server running on PORT ${PORT}`)
         })
     } catch (error) {

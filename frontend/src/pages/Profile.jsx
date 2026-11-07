@@ -5,6 +5,7 @@ function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchedProfile = async () => {
@@ -48,6 +49,8 @@ function Profile() {
       : `${API_ORIGIN}${user.profileImage}`
     : "";
 
+    console.log("Profile image path:", user.profileImage);
+console.log("Full image URL:", profileImageUrl);
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 p-6">
       <section className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-lg">
@@ -55,11 +58,12 @@ function Profile() {
           My Profile
         </h1>
         <div className="mb-6 flex flex-col items-center">
-          {profileImageUrl ? (
+          {profileImageUrl && !imageError ? (
             <img
               src={profileImageUrl}
               alt="Profile"
-              className="h-28 w-28 rounded-full object-cover"
+              onError={()=>{setImageError(true)}}
+              className="h-28 w-28 rounded-full object-cover bg-red-700"
             />
           ) : (
             <div className="flex h-28 w-28 items-center justify-center rounded-full bg-slate-200 text-3xl font-bold text-slate-500">

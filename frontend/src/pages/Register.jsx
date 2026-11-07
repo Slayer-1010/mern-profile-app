@@ -77,15 +77,15 @@ function Register() {
           </div>
         )}
 
-        {successMessage && (
+        {/* {successMessage && (
           <div
             role="status"
             className="rounded-lg bg-green-50 p-3 text-sm text-green-700"
           >
             {successMessage}
           </div>
-        )}
-
+        )} */}
+  
         <Input
           id="name"
           label="Full Name"
