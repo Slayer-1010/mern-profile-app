@@ -76,6 +76,7 @@ function EditProfile() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 p-6">
+      //Will make some changes   
       <form
         onSubmit={handleSubmit(onSubmit)}
         noValidate
@@ -170,6 +171,7 @@ function EditProfile() {
         >
           Cancel
         </button>
+        
       </form>
     </main>
   );
