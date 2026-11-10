@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import {getMyProfile} from "../services/prrofileServices";
+import { useNavigate } from "react-router-dom";
+
 
 function Profile() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
+
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchedProfile = async () => {
@@ -23,6 +28,7 @@ function Profile() {
     fetchedProfile();
   }, []);
 
+  
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-900">
@@ -49,8 +55,8 @@ function Profile() {
       : `${API_ORIGIN}${user.profileImage}`
     : "";
 
-    console.log("Profile image path:", user.profileImage);
-console.log("Full image URL:", profileImageUrl);
+    // console.log("Profile image path:", user.profileImage);
+    // console.log("Full image URL:", profileImageUrl);
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-900 p-6">
       <section className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-lg">
@@ -101,6 +107,7 @@ console.log("Full image URL:", profileImageUrl);
 
         <button
           type="button"
+          onClick={ () => navigate("/profile/edit") }
           className="mt-8 w-full rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700"
         >
           Edit Profile

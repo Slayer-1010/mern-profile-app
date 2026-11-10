@@ -1,13 +1,9 @@
-
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import Input from "../components/Input";
 import Button from "../components/Button";
-import {
-  getMyProfile,
-  updateMyProfile,
-} from "../services/prrofileServices";
+import { getMyProfile, updateMyProfile } from "../services/prrofileServices";
 
 function EditProfile() {
   const [loading, setLoading] = useState(true);
@@ -152,7 +148,8 @@ function EditProfile() {
             onChange={(event) =>
               setSelectedImage(event.target.files?.[0] || null)
             }
-            className="w-full rounded-lg border border-slate-300 p-2"
+            className="w-full rounded-lg border border-slate-300 p-2 file:rounded-md file:border file:border-slate-400 file:bg-slate-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-slate-700
+            file:cursor-pointer hover:file:bg-slate-200"
           />
 
           <p className="mt-1 text-xs text-slate-500">
