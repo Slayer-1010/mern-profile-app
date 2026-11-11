@@ -31,8 +31,17 @@ const updateUser = asyncHandler(async (req, res) => {
     if (name !== undefined) {
         updates.name = name.trim();
     }
+
     if (email !== undefined) {
-        updates.email = email.trim().toLowerCase();
+        const normalizedEmail = email.trim().toLowerCase();
+        const existingUser = await User.findOne({
+            email : normalizedEmail,
+            _id : {  $ne: req.user._id}
+        });
+        if(existingUser){
+            throw new CustomError("Email already exist,", 409)
+        }
+        updates.email = normalizedEmail;
     }
     if (phone !== undefined) {
         updates.phone = phone?.trim() || null;
@@ -47,17 +56,38 @@ const updateUser = asyncHandler(async (req, res) => {
     if (req.file) {
         updates.profileImage = `/uploads/${req.file.filename}`
     }
-    const user = await User.findByIdAndUpdate(
-        req.user._id,
-        updates,
-        {
-            new: true,
-            runValidators: true
-        }
-    ).select("-password")
 
+    // const user = await User.findByIdAndUpdate(
+    //     req.user._id,
+    //     updates,
+    //     {
+    //         new: true,
+    //         runValidators: true
+    //     }
+    // ).select("-password")
+
+    // if (!user) {
+    //     throw new CustomError("User not found", 404);
+    // }
+
+    let user;
+    try {
+        user = await User.findByIdAndUpdate(
+            req.user._id,
+            updates,
+            {
+                new : true,
+                runValidators : true,
+            }
+        ).select("-password")
+    } catch (error) {
+        if(error.code === 11000 && error.keyPattern?.email){
+            throw new CustomError("Email alredy exist.", 409)
+        }
+        throw error;
+    }
     if (!user) {
-        throw new CustomError("User not found", 404);
+    throw new CustomError("User not found", 404);
     }
 
     // Delete the old image only after the database update succeeds
