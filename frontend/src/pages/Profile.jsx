@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import {getMyProfile} from "../services/prrofileServices";
 import { useNavigate } from "react-router-dom";
-
+import { loginUser, logoutUser } from "../services/authServices"
 
 function Profile() {
   const [user, setUser] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [imageError, setImageError] = useState(false);
 
+  const [isloggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("")
 
   const navigate = useNavigate();
 
@@ -28,6 +31,19 @@ function Profile() {
     fetchedProfile();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(false);
+      setLogoutError("");
+      await logoutUser;
+      navigate("/login", { replace : true});
+    } catch (error) {
+      setLogoutError(error.message || "Logout failed.");
+    }
+    finally{
+      setIsLoggingOut(false);
+    }
+  }
   
   if (loading) {
     return (
@@ -112,6 +128,20 @@ function Profile() {
         >
           Edit Profile
         </button>
+
+        <button 
+        type="button"
+        onClick={handleLogout}
+        disabled={isloggingOut}
+        className="mt-3 w-full rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled-opacity-50"
+        >
+          {isloggingOut ? "Logging out..." : "Logout"}
+        </button>
+        
+        {logoutError && (
+          <p role="alert"className="mt-3 text-center text-sm text-red-600">{logoutError}</p>
+        )}
+
       </section>
     </main>
   );

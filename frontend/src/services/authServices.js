@@ -40,3 +40,20 @@ export async function loginUser(credentials) {
 
     return result;
 }
+
+export async function logoutUser(){
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+        method : "POST",
+        credentials : "include"
+    });
+    
+    const result = await response.json()
+
+    if (!response.ok) {
+        throw new Error(
+            result.message || result.msg || "Logout failed."
+        );
+    }
+
+    return result;
+}
