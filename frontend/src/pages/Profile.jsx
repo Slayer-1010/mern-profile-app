@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {getMyProfile} from "../services/prrofileServices";
 import { useNavigate } from "react-router-dom";
-import { loginUser, logoutUser } from "../services/authServices"
+import { logoutUser } from "../services/authServices"
 
 function Profile() {
   const [user, setUser] = useState(null);
@@ -35,7 +35,7 @@ function Profile() {
     try {
       setIsLoggingOut(false);
       setLogoutError("");
-      await logoutUser;
+      await logoutUser();
       navigate("/login", { replace : true});
     } catch (error) {
       setLogoutError(error.message || "Logout failed.");
