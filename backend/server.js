@@ -15,6 +15,7 @@ const { crossOriginResourcePolicy } = require("helmet")
 const { contentSecurityPolicy } = require("helmet")
 
 // const protect = require("./middleware/authMiddleware")
+const adminRoute = require("./routes/adminRoutes")
 
 
 
@@ -47,6 +48,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 app.use("/api/auth", authRoute)
 app.use("/api/profile", ProfileRoute)
+app.use("/api/admin",adminRoute)
 
 // Temporary Protected Route
 // app.get("/api/test-protected", protect, (req, res) => {
