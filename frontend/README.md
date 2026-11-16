@@ -4,3 +4,5 @@ add api
 created branch for new  design
 Deleted branch 
 will pull changes  later at end
+
+finalising admin design and its features
