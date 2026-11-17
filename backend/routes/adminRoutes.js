@@ -3,19 +3,9 @@ const router = express.Router();
 
 const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/authorizeRoles")
-
+const { getDashboardStats } = require("../controller/adminController")
 //Temorary admin access test
-router.get("/dashboard", protect, authorizeRoles("admin"), (req,res) => {
-    res.status(200).json({
-        success : true,
-        message : "Admin access granted",
-        admin : {
-            id : req.user._id,
-            name : req.user.name,
-            email : req.user.email,
-            role : req.user.role
-        }
-    })
-})
+router.get("/dashboard", protect, authorizeRoles("admin"), getDashboardStats
+)
 
 module.exports = router;

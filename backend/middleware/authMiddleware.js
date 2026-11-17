@@ -26,6 +26,11 @@ const protect = async(req, res, next) => {
     if (!user) {
         throw new CustomError("User no longer exists.", 401);
     }
+    if(user.status !== "active"){
+        throw new CustomError("Your account has been disabled. Please contact the administrator.",
+            403
+        )
+    }
 
     // Make the authenticated user available to the protected route
     req.user = user
