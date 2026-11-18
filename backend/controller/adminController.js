@@ -51,8 +51,17 @@ const getAllUsers = asyncHandler(async (req,res) => {
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const skip = (page-1)*limit;
 
-    const {search , role, status } = req.query;
+    const {search , role, status, sortBy = "createdAt", order = "desc" } = req.query;
+    const allowedSortFields = ["name", "email", "createdAt"]
+    if(!allowedSortFields.includes(sortBy)){
+        throw new CustomError("Invalid sort fields", 400)
+    }
+    if(!["asc", "desc",].includes(order)){
+        throw new CustomError("Invalid sort order", 400)
+    }
 
+    const sortOrder = order === "asc" ? 1 : -1;
+    const sortOptions = {[sortBy] : sortOrder}
     //Build Filters
     const filter = {}
 
@@ -81,7 +90,7 @@ const getAllUsers = asyncHandler(async (req,res) => {
     const [users, totalUsers] = await Promise.all([
         User.find(filter)
             .select("name email phone role status createdAt")
-            .sort({createdAt :-1})
+            .sort(sortOptions)
             .skip(skip)
             .limit(limit)
             .lean(),
