@@ -1,9 +1,10 @@
 const User = require ("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
+const CustomError = require("../utils/CustomError")
 
 const getDashboardStats = asyncHandler(async (req,res) => {
-    const thirtDaysAgo = new Date();
-    thirtDaysAgo.setDate(thirtDaysAgo.getDate() - 30);
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const [
         totalUsers,
         activeUsers,
@@ -15,14 +16,14 @@ const getDashboardStats = asyncHandler(async (req,res) => {
         User.countDocuments({role : "user", status : "active"}),
         User.countDocuments({role : "user", status : "disabled"}),
         User.countDocuments({role : "admin"}),
-        User.countDocuments({role : "user", createdAt : {$gte : thirtDaysAgo}}),
+        User.countDocuments({role : "user", createdAt : {$gte : thirtyDaysAgo}}),
     ])
 
     res.status(200).json({
         success : true,
-        message: "DashboardStatistic Retrieved Successfully",
+        message: "Dashboard Statistic Retrieved Successfully",
         stats : {
-            totalUsers,
+        totalUsers,
         activeUsers,
         disabledUsers,
         totalAdmins,
@@ -30,4 +31,80 @@ const getDashboardStats = asyncHandler(async (req,res) => {
         }
     })
 })
-module.exports = {getDashboardStats}
+
+const getRecentUsers = asyncHandler(async (req,res) => {
+    const recentUsers = await User.find()
+    .select("name email role status createdAt")
+    .sort({createdAt :-1})
+    .limit(5)
+    .lean()
+    
+    res.status(200).json({
+        success: true,
+        message : "Recent users retrieved successfully",
+        users : recentUsers
+    })
+})
+
+const getAllUsers = asyncHandler(async (req,res) => {
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip = (page-1)*limit;
+
+    const {search , role, status } = req.query;
+
+    //Build Filters
+    const filter = {}
+
+    if(search?.trim()){
+        const searchTerm = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        filter.$or = [
+            {name : { $regex: searchTerm, $options : "i" } },
+            {email : { $regex: searchTerm, $options : "i" } }
+        ]
+    }
+
+    if(role){
+        if(!["user", "admin"].includes(role)){
+            throw new CustomError("Invalid role filter", 400)
+        }
+        filter.role = role;
+    }
+
+    if(status){
+        if(!["active", "disabled"].includes(status)){
+            throw new CustomError("Invalid role filter", 400)
+        }
+        filter.status = status;
+    }
+
+    const [users, totalUsers] = await Promise.all([
+        User.find(filter)
+            .select("name email phone role status createdAt")
+            .sort({createdAt :-1})
+            .skip(skip)
+            .limit(limit)
+            .lean(),
+
+        User.countDocuments(filter)
+    ])
+
+    res.status(200).json({
+        success :true,
+        message : "User Retrieved Successfully",
+        pagination : {
+            currentPage : page,
+            limit,
+            totalUsers,
+            totalPages : Math.ceil(totalUsers / limit)
+        },
+        filters : {
+            search : search || "",
+            role : role || "",
+            status : status || ""
+        },
+        users
+    })
+})
+
+module.exports = {getDashboardStats, getRecentUsers, getAllUsers}
