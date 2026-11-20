@@ -86,6 +86,11 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!user) {
         throw new CustomError("Invalid email or Password", 401)
     }
+    if (user.status !== "active") {
+        throw new CustomError(
+            "Your account has been disabled & cant be used to login. Please contact the administrator.",
+            403);
+    }
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 

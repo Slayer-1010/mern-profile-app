@@ -1,6 +1,7 @@
 const User = require ("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
-const CustomError = require("../utils/CustomError")
+const CustomError = require("../utils/CustomError");
+const mongoose = require("mongoose");
 
 const getDashboardStats = asyncHandler(async (req,res) => {
     const thirtyDaysAgo = new Date();
@@ -82,7 +83,7 @@ const getAllUsers = asyncHandler(async (req,res) => {
 
     if(status){
         if(!["active", "disabled"].includes(status)){
-            throw new CustomError("Invalid role filter", 400)
+            throw new CustomError("Invalid status filter", 400)
         }
         filter.status = status;
     }
@@ -116,4 +117,136 @@ const getAllUsers = asyncHandler(async (req,res) => {
     })
 })
 
-module.exports = {getDashboardStats, getRecentUsers, getAllUsers}
+const getUserDetails = asyncHandler(async (req,res) => {
+    const { id } = req.params;
+    //Validatae MongoDBId
+    if(!mongoose.isValidObjectId(id)){
+        throw new CustomError("Invalid User Id", 400);
+    }
+    const user = await User.findById(id).select("-password").lean();
+
+    if(!user){
+        throw new CustomError("User not found", 404)
+    }
+
+    res.status(200).json({
+        success : true,
+        message : "User detail retrieved successfully",
+        user
+    });
+})
+
+const updateUserByAdmin = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const { name, email, phone, address, dob } = req.body;
+
+    if (!mongoose.isValidObjectId(id)) {
+        throw new CustomError("Invalid user ID", 400);
+    }
+
+    const updates = {};
+
+    if (name !== undefined) updates.name = name.trim();
+
+    if (email !== undefined) {
+        const normalizedEmail = email.trim().toLowerCase();
+
+        const existingUser = await User.findOne({
+            email: normalizedEmail,
+            _id: { $ne: id }
+        });
+
+        if (existingUser) {
+            throw new CustomError("Email already exists", 409);
+        }
+
+        updates.email = normalizedEmail;
+    }
+
+    if (phone !== undefined) updates.phone = phone?.trim() || null;
+    if (address !== undefined) updates.address = address.trim();
+    if (dob !== undefined) updates.dob = dob || null;
+
+    if (Object.keys(updates).length === 0) {
+        throw new CustomError("Please provide at least one field to update", 400);
+    }
+
+    let user;
+
+    try {
+        user = await User.findByIdAndUpdate(
+            id,
+            updates,
+            {
+                new: true,
+                runValidators: true
+            }
+        ).select("-password");
+
+    } catch (error) {
+        if (error.code === 11000 && error.keyPattern?.email) {
+            throw new CustomError("Email already exists", 409);
+        }
+
+        throw error;
+    }
+
+    if (!user) {
+        throw new CustomError("User not found", 404);
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+        user
+    });
+});
+
+const updateUserStatus  = asyncHandler(async (req,res) => {
+    const {id} = req.params;
+    const {status} = req.body;
+     // Validate MongoDB ID
+    if (!mongoose.isValidObjectId(id)) {
+        throw new CustomError("Invalid user ID", 400);
+    }
+
+    // Validate status
+    if (!["active", "disabled"].includes(status)) {
+        throw new CustomError(
+            "Status must be either active or disabled",
+            400
+        );
+    }
+    const user = await User.findById(id);
+
+    if (!user) {
+        throw new CustomError("User not found", 404);
+    }
+
+    // Only regular user accounts can be managed
+    if (user.role !== "user") {
+        throw new CustomError(
+            "Only regular user accounts can be activated or deactivated",
+            403
+        );
+    }
+    if (user.status === status) {
+        throw new CustomError(`User is already ${status}`, 400);
+    }
+    user.status = status;
+    await user.save();
+    res.status(200).json({
+        success: true,
+        message: `User ${status === "active" ? "activated" : "deactivated"} successfully`,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            status: user.status
+        }
+    });
+
+})
+
+module.exports = {getDashboardStats, getRecentUsers, getAllUsers , getUserDetails, updateUserByAdmin, updateUserStatus}
