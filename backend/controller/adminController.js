@@ -2,6 +2,8 @@ const User = require ("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
 const CustomError = require("../utils/CustomError");
 const mongoose = require("mongoose");
+const fs = require("fs/promises")
+const path = require("path")
 
 const getDashboardStats = asyncHandler(async (req,res) => {
     const thirtyDaysAgo = new Date();
@@ -249,4 +251,62 @@ const updateUserStatus  = asyncHandler(async (req,res) => {
 
 })
 
-module.exports = {getDashboardStats, getRecentUsers, getAllUsers , getUserDetails, updateUserByAdmin, updateUserStatus}
+const deleteUser = asyncHandler(async (req, res) => {
+    const {id} = req.params
+    
+    // Validate MongoDB ID
+    if (!mongoose.isValidObjectId(id)) {
+        throw new CustomError("Invalid user ID", 400);
+    }
+
+    const user = await User.findById(id);
+
+    if (!user) {
+        throw new CustomError("User not found", 404);
+    }
+
+    // Prevent deleting admin accounts
+    if (user.role !== "user") {
+        throw new CustomError(
+            "Admin accounts cannot be deleted through this endpoint",
+            403
+        );
+    }
+
+    // Prevent self-deletion
+    if (user._id.equals(req.user._id)) {
+        throw new CustomError(
+            "You cannot delete your own account",
+            403
+        );
+    }
+
+    // Delete the user from MongoDB
+    await User.findByIdAndDelete(id);
+
+    // Delete the user's locally stored profile image
+    if (user.profileImage?.startsWith("/uploads/")) {
+        const filename = path.basename(user.profileImage);
+        const imagePath = path.join(__dirname, "..", "uploads", filename);
+        try {
+            await fs.unlink(imagePath);
+        } catch (error) {
+            if (error.code !== "ENOENT") {
+                console.error("Failed to delete profile image:", error);
+            }
+        }
+    }
+
+    res.status(200).json({
+        success: true,
+        message: "User deleted successfully",
+        deletedUser: {
+            id: user._id,
+            name: user.name,
+            email: user.email
+        }
+    });
+
+})
+
+module.exports = {getDashboardStats, getRecentUsers, getAllUsers , getUserDetails, updateUserByAdmin, updateUserStatus, deleteUser}

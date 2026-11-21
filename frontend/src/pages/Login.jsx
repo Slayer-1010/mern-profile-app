@@ -5,7 +5,6 @@ import Button from "../components/Button";
 import { loginUser } from "../services/authServices";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-
 function Login() {
   const [serverError, setServerError] = useState("");
   // const [successMessage, setSuccessMessage] = useState("");
@@ -28,15 +27,21 @@ function Login() {
 
   const onSubmit = async (data) => {
     setServerError("");
-    // setSuccessMessage(""); 
+    // setSuccessMessage("");
 
     try {
       const result = await loginUser(data);
       // setSuccessMessage(result.msg || "Login successful!");
       if (result.success) {
-        navigate("/profile", {
-          replace: true,
-        });
+        if (result.user?.role === "admin") {
+          navigate("/admin/dashboard", {
+            replace : true,
+          })
+        } else {
+          navigate("/profile", {
+            replace: true,
+          });
+        }
       }
       console.log("Login response:", result);
     } catch (error) {
