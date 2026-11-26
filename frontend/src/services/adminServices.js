@@ -36,11 +36,39 @@ export async function getRecentUsers() {
 
   return result;
 }
+//normal getuser without filter
+// export async function getAllUsers(page = 1, limit = 10) {
+//   const response = await fetch(
+//     `${APP_BASE_URL}/admin/users?page=${page}&limit=${limit}`,
+//     {
+//       method: "GET",
+//       credentials: "include",
+//     }
+//   );
 
+//   const result = await response.json();
 
-export async function getAllUsers(page = 1, limit = 10) {
+//   if (!response.ok) {
+//     throw new Error(
+//       result.message || result.msg || "Failed to retrieve users."
+//     );
+//   }
+
+//   return result;
+// }
+
+export async function getAllUsers(page = 1, limit = 10, filters = {}) {
+  const params = new URLSearchParams({
+    page : String(page),
+    limit : String(limit),
+  })
+  
+  if (filters.search) params.set("search",filters.search)
+  if (filters.role) params.set("role",filters.role)
+  if (filters.status) params.set("status",filters.status)
+
   const response = await fetch(
-    `${APP_BASE_URL}/admin/users?page=${page}&limit=${limit}`,
+    `${APP_BASE_URL}/admin/users?${params.toString()}`,
     {
       method: "GET",
       credentials: "include",
@@ -56,4 +84,21 @@ export async function getAllUsers(page = 1, limit = 10) {
   }
 
   return result;
+}
+
+export async function getUserDetails(userId) {
+  const response = await fetch(`${APP_BASE_URL}/admin/users/${userId}`,
+    {
+      method : "GET",
+      credentials : "include"
+    }
+  );
+  const result = await response.json();
+  if(!result){
+    throw new Error(
+      result.message || result.msg || "Failed to retrieve user details."
+    );
+  }
+  return result;
+
 }

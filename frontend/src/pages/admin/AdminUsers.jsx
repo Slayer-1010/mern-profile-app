@@ -1,6 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { getAllUsers } from "../../services/adminServices";
+import Input from "../../components/Input";
+import Button from "../../components/Button";
+import { Link } from "react-router-dom";
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -9,13 +11,23 @@ function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [searchTerm, setSearchTerm] = useState("");
+  const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
+
+  const [filters, setFilters] = useState({
+    search: "",
+    role: "",
+    status: "",
+  });
+
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
       setError("");
 
       try {
-        const result = await getAllUsers(page, 10);
+        const result = await getAllUsers(page, 10, filters);
         setUsers(result.users || []);
         setPagination(result.pagination || null);
       } catch (error) {
@@ -26,7 +38,7 @@ function AdminUsers() {
     };
 
     fetchUsers();
-  }, [page]);
+  }, [page, filters]);
 
   return (
     <div className="space-y-6">
@@ -39,11 +51,101 @@ function AdminUsers() {
         </p>
       </div>
 
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setPage(1);
+          setFilters({
+            search: searchTerm.trim(),
+            role,
+            status,
+          });
+        }}
+        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-end"
+      >
+        <div className="flex-1">
+          <Input
+            label="Search Users"
+            id="search"
+            placeholder="Search by name or email..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          {/* <label className="mb-2 block text-sm font-medium text-slate-700">
+            Search users
+          </label> 
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name or email..."
+            className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+          /> */}
+        </div>
+        <div className="w-full lg:w-44">
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Role
+          </label>
+          <select
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+          >
+            <option value="">All Roles</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+
+        <div className="w-full lg:w-44">
+          <label className="mb-2 block text-sm font-medium text-slate-700">
+            Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500"
+          >
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
+        <div className="flex gap-2">
+          {/* <button
+            type="submit"
+            className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Apply
+          </button> */}
+          <Button type="submit" className="w-auto">
+            Apply
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm("");
+              setRole("");
+              setStatus("");
+              setPage(1);
+              setFilters({ search: "", role: "", status: "" });
+            }}
+            className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+          >
+            Clear
+          </button>
+        </div>
+      </form>
+
       <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
         {loading ? (
           <p className="p-6 text-slate-500">Loading users...</p>
         ) : error ? (
-          <p role="alert" className="p-6 text-red-600">{error}</p>
+          <p role="alert" className="p-6 text-red-600">
+            {error}
+          </p>
         ) : users.length === 0 ? (
           <p className="p-6 text-slate-500">No users found.</p>
         ) : (
@@ -70,20 +172,24 @@ function AdminUsers() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        user.role === "admin"
-                          ? "bg-violet-50 text-violet-700"
-                          : "bg-blue-50 text-blue-700"
-                      }`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          user.role === "admin"
+                            ? "bg-violet-50 text-violet-700"
+                            : "bg-blue-50 text-blue-700"
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        user.status === "active"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-rose-50 text-rose-700"
-                      }`}>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${
+                          user.status === "active"
+                            ? "bg-emerald-50 text-emerald-700"
+                            : "bg-rose-50 text-rose-700"
+                        }`}
+                      >
                         {user.status}
                       </span>
                     </td>
@@ -91,7 +197,12 @@ function AdminUsers() {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-slate-400">
-                      Coming soon
+                      <Link
+                        to={`/admin/users/${user._id}`}
+                        className="font-semibold text-blue-600 hover:text-blue-700"
+                      >
+                        View Details
+                      </Link>
                     </td>
                   </tr>
                 ))}

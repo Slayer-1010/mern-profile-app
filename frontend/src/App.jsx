@@ -8,6 +8,7 @@ import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminUserDetails from "./pages/admin/AdminUserDetails";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route element={<AdminLayout />}>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/users/:id" element={<AdminUserDetails />} />
           </Route>
         </Route>
       </Routes>
