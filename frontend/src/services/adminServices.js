@@ -94,11 +94,26 @@ export async function getUserDetails(userId) {
     }
   );
   const result = await response.json();
-  if(!result){
+  if(!response.ok){
     throw new Error(
       result.message || result.msg || "Failed to retrieve user details."
     );
   }
   return result;
+}
 
+export async function updateUserByAdmin(userId, userData){
+  const response = await fetch(`${APP_BASE_URL}/admin/users/${userId}`, {
+    method : "PATCH",
+    credentials : "include",
+    headers : {
+      "Content-Type" : "application/json"
+    },
+    body : JSON.stringify(userData),
+  })
+  const result = await response.json()
+  if(!response.ok){
+    throw new Error(result.message || result.msg || "Failed to update user")
+  }
+  return result;
 }
